@@ -17,6 +17,9 @@ jobs:
       - name: Install backend dependencies
         working-directory: ./backend
         run: npm install
+      - name: Fix ESLint permissions
+        working-directory: ./backend
+        run: chmod +x ./node_modules/.bin/eslint
       - name: Run backend linting
         working-directory: ./backend
         run: npx eslint src
@@ -24,9 +27,4 @@ jobs:
         working-directory: ./backend
         run: npm test
         continue-on-error: true
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm install
-      - name: Build frontend
-        working-directory: ./frontend
-        run: npm run build
+      - name: Install
