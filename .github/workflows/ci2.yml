@@ -26,6 +26,10 @@ jobs:
         working-directory: ./backend
         run: chmod +x ./node_modules/.bin/eslint
 
+      - name: Fix Jest permissions
+        working-directory: ./backend
+        run: chmod +x ./node_modules/.bin/jest
+
       - name: Run backend linting
         working-directory: ./backend
         run: npx eslint src
