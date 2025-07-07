@@ -7,7 +7,8 @@ Scholar-Dorm is a web-based learning management system designed to empower Niger
 - Modular tech courses with quizzes and offline resources.
 - Mentorship matching and virtual check-ins.
 - Confidence tracking dashboard.
-- Project-based challenges and digital portfolio..
+
+- Project-based challenges and digital portfolio.
 
 ## Tech Stack
 - **Backend**: Node.js, Express, MongoDB, Firebase (Authentication)
