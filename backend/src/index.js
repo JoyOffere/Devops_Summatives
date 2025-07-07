@@ -29,5 +29,10 @@ app.use('/api/portfolio-projects', portfolioProjectRoutes);
 
 app.get('/', (req, res) => res.send('Scholar-Dorm API'));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Only start the server if this file is run directly
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+module.exports = app;
