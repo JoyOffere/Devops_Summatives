@@ -2,6 +2,16 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 
+// Get all users
+router.get('/', async (req, res) => {
+  try {
+    const users = await User.find().select('-password'); // Exclude password field
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/register', async (req, res) => {
   try {
     const { email, password, name } = req.body;
@@ -42,6 +52,13 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email, password });
+  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+  res.json({ message: 'Login successful', user });
 });
 
 module.exports = router;

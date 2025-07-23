@@ -27,6 +27,16 @@ app.use('/api/mentorship-assignments', mentorshipAssignmentRoutes);
 app.use('/api/confidence-dashboards', confidenceDashboardRoutes);
 app.use('/api/portfolio-projects', portfolioProjectRoutes);
 
+app.get('/api', (req, res) => {
+  res.json({
+    users: '/api/users',
+    learningProgress: '/api/learning-progress',
+    mentorshipAssignments: '/api/mentorship-assignments',
+    confidenceDashboards: '/api/confidence-dashboards',
+    portfolioProjects: '/api/portfolio-projects'
+  });
+});
+
 app.get('/', (req, res) => res.send('Scholar-Dorm API'));
 
 // Only start the server if this file is run directly
