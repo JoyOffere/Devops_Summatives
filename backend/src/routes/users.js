@@ -12,14 +12,29 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Register route
 router.post('/register', async (req, res) => {
   try {
+    console.log('Register request received:', req.body);
+    
+    // Your registration logic here
     const { email, password, name } = req.body;
     const user = new User({ email, password, name });
     await user.save();
-    res.status(201).json({ message: 'User registered', user });
+    
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      user: { email, name }
+    });
+    
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Registration error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Registration failed',
+      error: error.message
+    });
   }
 });
 
