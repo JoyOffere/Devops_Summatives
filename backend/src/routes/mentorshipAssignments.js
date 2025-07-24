@@ -2,6 +2,21 @@ const express = require('express');
 const router = express.Router();
 const MentorshipAssignment = require('../models/MentorshipAssignment');
 
+// Get all mentorship assignments
+router.get('/', async (req, res) => {
+  try {
+    const { menteeId, mentorId } = req.query;
+    let query = {};
+    if (menteeId) query.menteeId = menteeId;
+    if (mentorId) query.mentorId = mentorId;
+    
+    const assignments = await MentorshipAssignment.find(query).populate('menteeId mentorId');
+    res.json(assignments);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/', async (req, res) => {
   try {
     const { menteeId, mentorId, checkInSchedule } = req.body;

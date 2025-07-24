@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 const PortfolioProject = require('../models/PortfolioProject');
 
+// Get all projects
+router.get('/', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    let query = {};
+    if (userId) query.userId = userId;
+    
+    const projects = await PortfolioProject.find(query).populate('userId');
+    res.json(projects);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/', async (req, res) => {
   try {
     const { userId, projectTitle, description, challengeId } = req.body;
