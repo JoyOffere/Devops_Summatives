@@ -1,6 +1,12 @@
 # Scholar-Dorm
 
 Scholar-Dorm is a web-based learning management system designed to empower Nigerian girls and young women (ages 13–35) with tech skills, mentorship, and project-based learning.
+<img width="1364" height="621" alt="image" src="https://github.com/user-attachments/assets/e3a0345d-3ef3-4e25-bb01-335cc0be0155" />
+
+
+<img width="1336" height="634" alt="image" src="https://github.com/user-attachments/assets/bd8c7365-d724-4afb-a666-3f5af8b65890" />
+
+
 
 ## Features
 - User registration and personalized learning goals
