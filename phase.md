@@ -1,10 +1,11 @@
 Phase 2 Submission
 
-Live Public URL
+Live Public URL: https://scholardorm.azurewebsites.net/
 
-Scholar-Dorm Live URL
+Scholar-Dorm Live URL : https://scholardorm.azurewebsites.net/
 
 Screenshots
+<img width="1341" height="605" alt="image" src="https://github.com/user-attachments/assets/5ffd4ecf-3b6f-4ad8-aa0d-a8bb37ddba5a" />
 
 
 
@@ -20,9 +21,11 @@ RDS/DocumentDB Screenshot
 
 ECS Service Screenshot
 
-Peer Review Pull Request
+Peer Review Pull Request: https://github.com/JoyOffere/Devops_Summatives/pull/49
 
-Reviewed PR Link
+Reviewed PR Link: https://github.com/ayadeleke/GreenLife-Eco-Tracker/pull/61
+
+https://github.com/ayadeleke/GreenLife-Eco-Tracker/pull/64
 
 Reflection
 
