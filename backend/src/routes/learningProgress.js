@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 const LearningProgress = require('../models/LearningProgress');
 
+// Get all learning progress records
+router.get('/', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    let query = {};
+    if (userId) query.userId = userId;
+    
+    const progress = await LearningProgress.find(query).populate('userId');
+    res.json(progress);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/', async (req, res) => {
   try {
     const { userId, courseId, lessonsCompleted, quizScores, offlineResourcesDownloaded } = req.body;
