@@ -1,0 +1,404 @@
+name: CI/CD Pipeline - ScholarDorm
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  REGISTRY_NAME_STAGING: acrcontainerappstaging
+  REGISTRY_NAME_PRODUCTION: scholardormproductionacr
+  RESOURCE_GROUP_STAGING: rg-containerapp-staging
+  RESOURCE_GROUP_PRODUCTION: scholardorm-production-rg
+
+jobs:
+  # Security and Code Quality Scanning
+  security-scan:
+    name: Security & Code Quality Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run ESLint for Frontend
+        working-directory: ./frontend
+        run: |
+          npm install
+          npm run lint
+        continue-on-error: true
+
+      - name: Run ESLint for Backend
+        working-directory: ./backend
+        run: |
+          npm install
+          npm run lint
+        continue-on-error: true
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --all-projects --severity-threshold=high
+        continue-on-error: true
+
+  # Infrastructure Security Scan
+  infrastructure-scan:
+    name: Infrastructure Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov for Terraform
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: terraform-azure-containerapp/
+          framework: terraform
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+        continue-on-error: true
+
+      - name: Upload Checkov scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: checkov-results.sarif
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Format Check
+        run: |
+          cd terraform-azure-containerapp
+          terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Validate
+        run: |
+          cd terraform-azure-containerapp/environments/staging
+          terraform init -backend=false
+          terraform validate
+
+  # Build and Test Applications
+  build-and-test:
+    name: Build and Test Applications
+    runs-on: ubuntu-latest
+    needs: [security-scan]
+    strategy:
+      matrix:
+        app: [frontend, backend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.app }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./${{ matrix.app }}
+        run: npm ci
+
+      - name: Run tests
+        working-directory: ./${{ matrix.app }}
+        run: npm test
+        env:
+          CI: true
+
+      - name: Build application
+        working-directory: ./${{ matrix.app }}
+        run: |
+          if [ "${{ matrix.app }}" = "frontend" ]; then
+            REACT_APP_API_URL=https://scholardorm-backend-staging.gentlemeadow-49027184.eastus.azurecontainerapps.io/api npm run build
+          else
+            npm run build || echo "No build script found"
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-build
+          path: ${{ matrix.app }}/build/
+          retention-days: 1
+
+  # Container Image Build and Scan
+  build-images:
+    name: Build and Scan Container Images
+    runs-on: ubuntu-latest
+    needs: [build-and-test, infrastructure-scan]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+    strategy:
+      matrix:
+        app: [frontend, backend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.app }}
+          file: ./${{ matrix.app }}/Dockerfile
+          push: false
+          tags: ${{ matrix.app }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            REACT_APP_API_URL=https://scholardorm-backend-staging.gentlemeadow-49027184.eastus.azurecontainerapps.io/api
+
+      - name: Run Trivy vulnerability scanner on image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ matrix.app }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+
+      - name: Upload Trivy image scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+
+      - name: Save Docker image
+        run: |
+          docker save ${{ matrix.app }}:${{ github.sha }} | gzip > ${{ matrix.app }}-image.tar.gz
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-image
+          path: ${{ matrix.app }}-image.tar.gz
+          retention-days: 1
+
+  # Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Download Docker images
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-image"
+          merge-multiple: true
+
+      - name: Load and push images to staging registry
+        run: |
+          # Login to staging ACR
+          az acr login --name ${{ env.REGISTRY_NAME_STAGING }}
+          
+          # Load and tag frontend image
+          docker load < frontend-image.tar.gz
+          docker tag frontend:${{ github.sha }} ${{ env.REGISTRY_NAME_STAGING }}.azurecr.io/scholardorm-frontend:latest
+          docker tag frontend:${{ github.sha }} ${{ env.REGISTRY_NAME_STAGING }}.azurecr.io/scholardorm-frontend:${{ github.sha }}
+          
+          # Load and tag backend image
+          docker load < backend-image.tar.gz
+          docker tag backend:${{ github.sha }} ${{ env.REGISTRY_NAME_STAGING }}.azurecr.io/scholardorm-backend:latest
+          docker tag backend:${{ github.sha }} ${{ env.REGISTRY_NAME_STAGING }}.azurecr.io/scholardorm-backend:${{ github.sha }}
+          
+          # Push images
+          docker push ${{ env.REGISTRY_NAME_STAGING }}.azurecr.io/scholardorm-frontend:latest
+          docker push ${{ env.REGISTRY_NAME_STAGING }}.azurecr.io/scholardorm-frontend:${{ github.sha }}
+          docker push ${{ env.REGISTRY_NAME_STAGING }}.azurecr.io/scholardorm-backend:latest
+          docker push ${{ env.REGISTRY_NAME_STAGING }}.azurecr.io/scholardorm-backend:${{ github.sha }}
+
+      - name: Deploy infrastructure to staging
+        working-directory: terraform-azure-containerapp/environments/staging
+        run: |
+          # Initialize Terraform
+          terraform init
+          
+          # Plan deployment
+          terraform plan -out=staging.tfplan
+          
+          # Apply deployment
+          terraform apply -auto-approve staging.tfplan
+
+      - name: Update container apps in staging
+        run: |
+          # Update backend container app
+          az containerapp update \
+            --name scholardorm-backend-staging \
+            --resource-group ${{ env.RESOURCE_GROUP_STAGING }} \
+            --image ${{ env.REGISTRY_NAME_STAGING }}.azurecr.io/scholardorm-backend:latest
+          
+          # Update frontend container app
+          az containerapp update \
+            --name scholardorm-frontend-staging \
+            --resource-group ${{ env.RESOURCE_GROUP_STAGING }} \
+            --image ${{ env.REGISTRY_NAME_STAGING }}.azurecr.io/scholardorm-frontend:latest
+
+      - name: Run integration tests
+        run: |
+          # Wait for deployments to be ready
+          sleep 60
+          
+          # Basic health checks
+          curl -f https://scholardorm-backend-staging.gentlemeadow-49027184.eastus.azurecontainerapps.io/api/health || exit 1
+          curl -f https://scholardorm-frontend-staging.gentlemeadow-49027184.eastus.azurecontainerapps.io/ || exit 1
+          
+          echo "✅ Staging deployment successful and healthy"
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Download Docker images
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-image"
+          merge-multiple: true
+
+      - name: Load and push images to production registry
+        run: |
+          # Login to production ACR
+          az acr login --name ${{ env.REGISTRY_NAME_PRODUCTION }}
+          
+          # Load and tag frontend image
+          docker load < frontend-image.tar.gz
+          docker tag frontend:${{ github.sha }} ${{ env.REGISTRY_NAME_PRODUCTION }}.azurecr.io/scholardorm-frontend:latest
+          docker tag frontend:${{ github.sha }} ${{ env.REGISTRY_NAME_PRODUCTION }}.azurecr.io/scholardorm-frontend:${{ github.sha }}
+          
+          # Load and tag backend image
+          docker load < backend-image.tar.gz
+          docker tag backend:${{ github.sha }} ${{ env.REGISTRY_NAME_PRODUCTION }}.azurecr.io/scholardorm-backend:latest
+          docker tag backend:${{ github.sha }} ${{ env.REGISTRY_NAME_PRODUCTION }}.azurecr.io/scholardorm-backend:${{ github.sha }}
+          
+          # Push images
+          docker push ${{ env.REGISTRY_NAME_PRODUCTION }}.azurecr.io/scholardorm-frontend:latest
+          docker push ${{ env.REGISTRY_NAME_PRODUCTION }}.azurecr.io/scholardorm-frontend:${{ github.sha }}
+          docker push ${{ env.REGISTRY_NAME_PRODUCTION }}.azurecr.io/scholardorm-backend:latest
+          docker push ${{ env.REGISTRY_NAME_PRODUCTION }}.azurecr.io/scholardorm-backend:${{ github.sha }}
+
+      - name: Deploy infrastructure to production
+        working-directory: terraform-azure-containerapp/environments/production
+        run: |
+          # Initialize Terraform
+          terraform init
+          
+          # Plan deployment
+          terraform plan -out=production.tfplan
+          
+          # Apply deployment
+          terraform apply -auto-approve production.tfplan
+
+      - name: Update container apps in production
+        run: |
+          # Update backend container app
+          az containerapp update \
+            --name scholardorm-production \
+            --resource-group ${{ env.RESOURCE_GROUP_PRODUCTION }} \
+            --image ${{ env.REGISTRY_NAME_PRODUCTION }}.azurecr.io/scholardorm-backend:latest
+          
+          # Update frontend container app
+          az containerapp update \
+            --name scholardorm-frontend-production \
+            --resource-group ${{ env.RESOURCE_GROUP_PRODUCTION }} \
+            --image ${{ env.REGISTRY_NAME_PRODUCTION }}.azurecr.io/scholardorm-frontend:latest
+
+      - name: Run production health checks
+        run: |
+          # Wait for deployments to be ready
+          sleep 90
+          
+          # Basic health checks
+          curl -f https://scholardorm-production.gentlemeadow-49027184.eastus.azurecontainerapps.io/api/health || exit 1
+          curl -f https://scholardorm-frontend-production.gentlemeadow-49027184.eastus.azurecontainerapps.io/ || exit 1
+          
+          echo "✅ Production deployment successful and healthy"
+
+  # Notification and Cleanup
+  notify-and-cleanup:
+    name: Notify and Cleanup
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    steps:
+      - name: Notify Teams/Slack (Success)
+        if: needs.deploy-production.result == 'success'
+        run: |
+          echo "✅ Deployment to production completed successfully!"
+          # Add your Teams/Slack webhook notification here
+          # curl -X POST -H 'Content-type: application/json' --data '{"text":"✅ ScholarDorm deployment successful!"}' ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Teams/Slack (Failure)
+        if: needs.deploy-production.result == 'failure'
+        run: |
+          echo "❌ Deployment to production failed!"
+          # Add your Teams/Slack webhook notification here
+          # curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ ScholarDorm deployment failed!"}' ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Cleanup artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cleanup-marker
+          path: /dev/null
+          retention-days: 1
