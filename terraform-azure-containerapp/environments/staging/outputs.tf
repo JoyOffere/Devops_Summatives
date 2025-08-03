@@ -1,6 +1,6 @@
 output "resource_group_name" {
   description = "Name of the resource group"
-  value       = data.azurerm_resource_group.staging.name
+  value       = azurerm_resource_group.staging.name
 }
 
 output "application_insights_connection_string" {

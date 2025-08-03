@@ -110,3 +110,21 @@ variable "target_port" {
   type        = number
   default     = 80
 }
+
+variable "use_existing_container_app" {
+  description = "Whether to use an existing container app instead of creating a new one"
+  type        = bool
+  default     = false
+}
+
+variable "use_existing_container_environment" {
+  description = "Whether to use an existing container app environment instead of creating a new one"
+  type        = bool
+  default     = false
+}
+
+variable "existing_container_environment_name" {
+  description = "Name of existing container app environment (required if use_existing_container_environment is true)"
+  type        = string
+  default     = null
+}

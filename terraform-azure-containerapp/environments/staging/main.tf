@@ -23,16 +23,17 @@ locals {
   }
 }
 
-# Use existing resource group instead of creating a new one
-data "azurerm_resource_group" "staging" {
-  name = var.resource_group_name  # Use variable instead of hardcoded value
+resource "azurerm_resource_group" "staging" {
+  name     = "rg-containerapp-staging"  # Keep existing name
+  location = var.location
+  tags     = local.common_tags
 }
 
 # Application Insights - Basic tier (cheapest)
 resource "azurerm_application_insights" "staging" {
   name                = "scholardorm-staging-insights-staging"  # Updated to scholardorm
-  location            = data.azurerm_resource_group.staging.location
-  resource_group_name = data.azurerm_resource_group.staging.name
+  location            = azurerm_resource_group.staging.location
+  resource_group_name = azurerm_resource_group.staging.name
   application_type    = "web"
   daily_data_cap_in_gb = 1  # Limit daily data ingestion to 1GB (free tier)
   tags                = local.common_tags
@@ -41,8 +42,8 @@ resource "azurerm_application_insights" "staging" {
 # Log Analytics Workspace - Free tier
 resource "azurerm_log_analytics_workspace" "staging" {
   name                = "scholardorm-staging-logs-staging"  # Updated to scholardorm
-  location            = data.azurerm_resource_group.staging.location
-  resource_group_name = data.azurerm_resource_group.staging.name
+  location            = azurerm_resource_group.staging.location
+  resource_group_name = azurerm_resource_group.staging.name
   sku                = "PerGB2018"
   retention_in_days   = 30     # Minimum allowed retention (cheapest)
   daily_quota_gb      = 0.5    # Limit daily quota to 500MB
@@ -52,7 +53,7 @@ resource "azurerm_log_analytics_workspace" "staging" {
 # Action Group for alerts
 resource "azurerm_monitor_action_group" "staging" {
   name                = "scholardorm-staging-alerts-staging"  # Updated to scholardorm
-  resource_group_name = data.azurerm_resource_group.staging.name
+  resource_group_name = azurerm_resource_group.staging.name
   short_name          = "stagealerts"
 
   email_receiver {
@@ -66,7 +67,7 @@ resource "azurerm_monitor_action_group" "staging" {
 # Single alert to minimize costs
 resource "azurerm_monitor_metric_alert" "response_time" {
   name                = "scholardorm-staging-high-response-time"  # Updated to scholardorm
-  resource_group_name = data.azurerm_resource_group.staging.name
+  resource_group_name = azurerm_resource_group.staging.name
   scopes              = [azurerm_application_insights.staging.id]
   description         = "Alert when response time is too high"
   severity            = 2  # Keep original severity
@@ -91,8 +92,8 @@ resource "azurerm_monitor_metric_alert" "response_time" {
 # Container Registry - Keep existing settings
 module "container_registry" {
   source              = "../../modules/container-registry"
-  resource_group_name = data.azurerm_resource_group.staging.name
-  location           = data.azurerm_resource_group.staging.location
+  resource_group_name = azurerm_resource_group.staging.name
+  location           = azurerm_resource_group.staging.location
   registry_name      = "acrcontainerappstaging"  # Keep existing name
   environment        = local.environment
   sku                = "Standard"  # Keep existing SKU to avoid replacement
@@ -107,8 +108,8 @@ locals {
 # Frontend Container App (microservices)
 module "frontend_app" {
   source                     = "../../modules/container-app"
-  resource_group_name        = data.azurerm_resource_group.staging.name
-  location                  = data.azurerm_resource_group.staging.location
+  resource_group_name        = azurerm_resource_group.staging.name
+  location                  = azurerm_resource_group.staging.location
   app_name                  = var.app_name
   image_name                = var.image_name
   frontend_image            = var.frontend_image
@@ -134,8 +135,8 @@ module "frontend_app" {
 module "backend_app" {
   count                      = var.frontend_only ? 0 : 1
   source                     = "../../modules/container-app"
-  resource_group_name        = data.azurerm_resource_group.staging.name
-  location                  = data.azurerm_resource_group.staging.location
+  resource_group_name        = azurerm_resource_group.staging.name
+  location                  = azurerm_resource_group.staging.location
   app_name                  = "scholardorm-backend"
   image_name                = "scholardorm-backend"
   frontend_image            = null  # Backend only

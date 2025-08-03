@@ -127,12 +127,13 @@ resource "azurerm_monitor_metric_alert" "error_rate" {
 }
 
 module "container_registry" {
-  source              = "../../modules/container-registry"
-  resource_group_name = local.resource_group_name
-  location           = local.location
-  registry_name      = var.container_registry_name  # Use explicit name from tfvars
-  environment        = local.environment
-  tags               = local.common_tags
+  source                = "../../modules/container-registry"
+  resource_group_name   = local.resource_group_name
+  location             = local.location
+  registry_name        = var.container_registry_name  # Use explicit name from tfvars
+  environment          = local.environment
+  use_existing_registry = var.use_existing_container_registry
+  tags                 = local.common_tags
 }
 
 # Reference existing staging environment to avoid regional limit

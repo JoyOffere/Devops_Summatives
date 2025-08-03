@@ -29,3 +29,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "use_existing_registry" {
+  description = "Whether to use an existing container registry instead of creating a new one"
+  type        = bool
+  default     = false
+}

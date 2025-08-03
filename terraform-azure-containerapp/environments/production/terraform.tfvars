@@ -5,6 +5,7 @@ resource_group_name = "scholardorm-production-rg"
 container_registry_name = "scholardormproductionacr"
 image_tag = "latest"
 use_existing_resource_group = true  # Use existing resource group to avoid conflicts
+use_existing_container_registry = true  # Use existing container registry to avoid conflicts
 environment_variables = {
   ENV = "production"
   NODE_ENV = "production"

@@ -6,7 +6,6 @@ image_name        = "scholardorm-frontend"
 frontend_image    = "acrcontainerappstaging.azurecr.io/scholardorm-frontend:latest"
 backend_image     = "acrcontainerappstaging.azurecr.io/scholardorm-backend:latest"
 frontend_only     = false
-use_existing_resource_group = true  # Use existing resource group to avoid conflicts
 environment_variables = {
   "NODE_ENV" = "staging"
   "PORT" = "80"
