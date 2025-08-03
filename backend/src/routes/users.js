@@ -35,7 +35,8 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     // Return user without password
-    const { password: _, ...userWithoutPassword } = user.toObject();
+    // eslint-disable-next-line no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user.toObject();
     res.json({ message: 'Login successful', user: userWithoutPassword });
   } catch (error) {
     res.status(500).json({ error: error.message });

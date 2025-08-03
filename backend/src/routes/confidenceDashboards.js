@@ -25,9 +25,9 @@ router.post('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const assignment = await MentorshipAssignment.findById(req.params.id).populate('menteeId mentorId');
-    if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
-    res.json(assignment);
+    const dashboard = await ConfidenceDashboard.findById(req.params.id).populate('userId');
+    if (!dashboard) return res.status(404).json({ error: 'Confidence dashboard not found' });
+    res.json(dashboard);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -35,10 +35,10 @@ router.get('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const { status, checkInSchedule, lastCheckIn, feedback } = req.body;
-    const assignment = await MentorshipAssignment.findByIdAndUpdate(req.params.id, { status, checkInSchedule, lastCheckIn, feedback }, { new: true, runValidators: true });
-    if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
-    res.json({ message: 'Assignment updated', assignment });
+    const { selfRating, peerFeedback, milestones } = req.body;
+    const dashboard = await ConfidenceDashboard.findByIdAndUpdate(req.params.id, { selfRating, peerFeedback, milestones }, { new: true, runValidators: true });
+    if (!dashboard) return res.status(404).json({ error: 'Confidence dashboard not found' });
+    res.json({ message: 'Confidence dashboard updated', dashboard });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -46,9 +46,9 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    const assignment = await MentorshipAssignment.findByIdAndDelete(req.params.id);
-    if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
-    res.json({ message: 'Assignment deleted' });
+    const dashboard = await ConfidenceDashboard.findByIdAndDelete(req.params.id);
+    if (!dashboard) return res.status(404).json({ error: 'Confidence dashboard not found' });
+    res.json({ message: 'Confidence dashboard deleted' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
