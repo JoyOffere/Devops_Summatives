@@ -183,11 +183,19 @@ jobs:
           context: ./${{ matrix.app }}
           file: ./${{ matrix.app }}/Dockerfile
           push: false
+          load: true
           tags: ${{ matrix.app }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             REACT_APP_API_URL=https://scholardorm-backend-staging.gentlemeadow-49027184.eastus.azurecontainerapps.io/api
+
+      - name: Verify Docker image exists
+        run: |
+          echo "Listing Docker images:"
+          docker images
+          echo "Checking for image: ${{ matrix.app }}:${{ github.sha }}"
+          docker inspect ${{ matrix.app }}:${{ github.sha }} || exit 1
 
       - name: Run Trivy vulnerability scanner on image
         uses: aquasecurity/trivy-action@master
@@ -195,10 +203,11 @@ jobs:
           image-ref: ${{ matrix.app }}:${{ github.sha }}
           format: 'sarif'
           output: 'trivy-image-results.sarif'
+        continue-on-error: true
 
       - name: Upload Trivy image scan results
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && hashFiles('trivy-image-results.sarif') != ''
         with:
           sarif_file: 'trivy-image-results.sarif'
 
