@@ -16,6 +16,11 @@ on:
         - staging
         - production
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 env:
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   REGISTRY_NAME_STAGING: acrcontainerappstaging
@@ -41,7 +46,7 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -86,7 +91,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload Checkov scan results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: checkov-results.sarif
@@ -189,7 +194,7 @@ jobs:
           output: 'trivy-image-results.sarif'
 
       - name: Upload Trivy image scan results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-image-results.sarif'
