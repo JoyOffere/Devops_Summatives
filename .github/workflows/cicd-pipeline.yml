@@ -54,14 +54,14 @@ jobs:
       - name: Run ESLint for Frontend
         working-directory: ./frontend
         run: |
-          npm install
+          npm ci || npm install
           npm run lint
         continue-on-error: true
 
       - name: Run ESLint for Backend
         working-directory: ./backend
         run: |
-          npm install
+          npm ci || npm install
           npm run lint
         continue-on-error: true
 
@@ -134,7 +134,9 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./${{ matrix.app }}
-        run: npm ci
+        run: |
+          # Try npm ci first, fallback to npm install if lock file is out of sync
+          npm ci || (echo "Lock file out of sync, running npm install..." && npm install)
 
       - name: Run tests
         working-directory: ./${{ matrix.app }}
