@@ -1,0 +1,17 @@
+resource_group_name = "rg-containerapp-staging"
+location           = "East US"  # One of the cheapest regions
+registry_name      = "acrcontainerappstaging"
+app_name          = "scholardorm-frontend"
+image_name        = "scholardorm-frontend"
+frontend_image    = "acrcontainerappstaging.azurecr.io/scholardorm-frontend:latest"
+backend_image     = "acrcontainerappstaging.azurecr.io/scholardorm-backend:latest"
+frontend_only     = false
+environment_variables = {
+  "NODE_ENV" = "staging"
+  "PORT" = "80"
+  "MONGO_URI" = "YOUR_MONGODB_CONNECTION_STRING"  # Replace with your MongoDB connection string
+  "REACT_APP_API_URL" = "https://scholardorm-backend-staging.gentlemeadow-49027184.eastus.azurecontainerapps.io/api"
+}
+cpu    = "0.25"     # Minimum CPU allocation (cheapest)
+memory = "0.5Gi"    # Minimum memory allocation (cheapest)
+alert_email = "j.offere@alustudent.com"

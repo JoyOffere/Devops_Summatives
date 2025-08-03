@@ -1,0 +1,60 @@
+# Build stage
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install --silent
+
+# Copy source code
+COPY . .
+
+# Accept build argument for API URL
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
+# Debug: Show the environment variable value
+RUN echo "REACT_APP_API_URL is set to: $REACT_APP_API_URL"
+
+# Build the application
+RUN npm run build
+
+# Production stage with Node.js
+FROM node:18-alpine AS production
+
+# Create app directory
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001 -G nodejs
+
+# Copy package.json and install only production dependencies
+COPY package*.json ./
+RUN npm install --only=production --silent
+
+# Copy the built application
+COPY --from=builder /app/build ./build
+
+# Copy the server file
+COPY server.js ./
+
+# Change ownership to non-root user
+RUN chown -R nextjs:nodejs /app
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Start the server
+CMD ["node", "server.js"]
