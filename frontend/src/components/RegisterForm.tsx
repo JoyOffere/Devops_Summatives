@@ -184,11 +184,11 @@ const RegisterForm = () => {
           />
           <label className="ml-2 text-sm text-gray-600">
             I agree to the{' '}
-            <a href="#" className="text-purple-600 hover:text-purple-700 font-medium">
+            <a href="/terms" className="text-purple-600 hover:text-purple-700 font-medium">
               Terms of Service
             </a>
             {' '}and{' '}
-            <a href="#" className="text-purple-600 hover:text-purple-700 font-medium">
+            <a href="/privacy" className="text-purple-600 hover:text-purple-700 font-medium">
               Privacy Policy
             </a>
           </label>
