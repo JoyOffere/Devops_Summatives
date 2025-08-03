@@ -63,3 +63,9 @@ variable "frontend_only" {
   type        = bool
   default     = false
 }
+
+variable "use_existing_resource_group" {
+  description = "Whether to use an existing resource group or create a new one"
+  type        = bool
+  default     = true  # Default to using existing to avoid conflicts
+}

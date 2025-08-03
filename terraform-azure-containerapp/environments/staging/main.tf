@@ -25,7 +25,7 @@ locals {
 
 # Use existing resource group instead of creating a new one
 data "azurerm_resource_group" "staging" {
-  name = "rg-containerapp-staging"
+  name = var.resource_group_name  # Use variable instead of hardcoded value
 }
 
 # Application Insights - Basic tier (cheapest)
