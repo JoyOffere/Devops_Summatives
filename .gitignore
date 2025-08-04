@@ -156,3 +156,8 @@ coverage/
 
 # Local development
 .local
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
