@@ -1,4 +1,4 @@
-import { loginUser, registerUser } from './api.ts';
+import { loginUser, registerUser } from './api';
 
 interface User {
   _id: string;

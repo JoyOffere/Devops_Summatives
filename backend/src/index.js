@@ -58,10 +58,10 @@ const connectDB = async () => {
 
 // Import your route files
 const userRoutes = require('./routes/users');
-const learningProgressRoutes = require('./routes/learning-progress');
-const mentorshipAssignmentRoutes = require('./routes/mentorship-assignments');
-const confidenceDashboardRoutes = require('./routes/confidence-dashboards');
-const portfolioProjectRoutes = require('./routes/portfolio-projects');
+const learningProgressRoutes = require('./routes/learningProgress');
+const mentorshipAssignmentRoutes = require('./routes/mentorshipAssignments');
+const confidenceDashboardRoutes = require('./routes/confidenceDashboards');
+const portfolioProjectRoutes = require('./routes/portfolioProjects');
 
 // Connect to database first
 connectDB();
@@ -130,7 +130,7 @@ app.get('/test', (req, res) => {
 });
 
 // Add a catch-all route for debugging
-app.use('*', (req, res) => {
+app.use('/*', (req, res) => {
   console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     error: 'Route not found',
