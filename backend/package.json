@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start": "nodemon src/index.js",
-    "test": "jest",
+    "test": "jest --testTimeout=10000 --forceExit --detectOpenHandles",
     "lint": "eslint ."
   },
   "name": "backend",
@@ -27,5 +27,11 @@
     "jest": "^30.0.3",
     "nodemon": "^3.1.10",
     "supertest": "^7.1.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 10000,
+    "detectOpenHandles": true,
+    "forceExit": true
   }
 }

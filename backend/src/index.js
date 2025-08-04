@@ -37,8 +37,6 @@ const connectDB = async () => {
     console.log('MongoDB URI:', process.env.MONGO_URI ? 'URI provided' : 'URI missing');
     
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 10000, // Increased timeout for Azure
       socketTimeoutMS: 45000,
       maxPoolSize: 10,
@@ -127,22 +125,6 @@ app.get('/test', (req, res) => {
     message: 'Backend is working!',
     timestamp: new Date().toISOString(),
     routes: ['/users/register', '/api/users/register']
-  });
-});
-
-// Add a catch-all route for debugging
-app.use('/*', (req, res) => {
-  console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({
-    error: 'Route not found',
-    method: req.method,
-    path: req.originalUrl,
-    availableRoutes: [
-      'GET /health',
-      'GET /test',
-      'POST /users/register',
-      'POST /api/users/register'
-    ]
   });
 });
 
