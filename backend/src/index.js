@@ -42,9 +42,10 @@ const connectDB = async () => {
       serverSelectionTimeoutMS: 10000, // Increased timeout for Azure
       socketTimeoutMS: 45000,
       maxPoolSize: 10,
-      bufferMaxEntries: 0,
       retryWrites: true,
-      w: 'majority'
+      writeConcern: {
+        w: 'majority'
+      }
     });
     
     console.log(`MongoDB Connected: ${conn.connection.host}`);
