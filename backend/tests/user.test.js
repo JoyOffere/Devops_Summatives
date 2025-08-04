@@ -4,11 +4,20 @@ const User = require('../src/models/User');
 const app = require('../src/index');
 
 describe('User API', () => {
+  let server;
+
+  beforeAll(async () => {
+    // Start the server before tests
+    server = app.listen(0); // Use 0 to pick a random available port
+  });
+
   beforeEach(async () => {
     await User.deleteMany({ email: 'test@example.com' });
   });
 
   afterAll(async () => {
+    // Close the server and MongoDB connection after tests
+    await new Promise((resolve) => server.close(resolve));
     await mongoose.connection.close();
   });
 
