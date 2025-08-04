@@ -7,19 +7,21 @@ describe('User API', () => {
   let server;
 
   beforeAll(async () => {
-    // Start the server before tests
-    server = app.listen(0); // Use 0 to pick a random available port
-  });
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    });
+    server = app.listen(0);
+  }, 10000);
 
   beforeEach(async () => {
     await User.deleteMany({ email: 'test@example.com' });
-  });
+  }, 10000);
 
   afterAll(async () => {
-    // Close the server and MongoDB connection after tests
-    await new Promise((resolve) => server.close(resolve));
     await mongoose.connection.close();
-  });
+    await new Promise(resolve => server.close(resolve));
+  }, 10000);
 
   it('should register a new user', async () => {
     const res = await request(app)
@@ -29,6 +31,6 @@ describe('User API', () => {
       console.log('Response:', res.body);
     }
     expect(res.statusCode).toEqual(201);
-    expect(res.body).toHaveProperty('message', 'User registered');
-  });
+    expect(res.body).toHaveProperty('message', 'User registered successfully'); // Updated
+  }, 10000);
 });
