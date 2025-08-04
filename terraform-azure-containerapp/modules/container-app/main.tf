@@ -1,13 +1,6 @@
-# Use existing container app environment if specified
-data "azurerm_container_app_environment" "existing" {
-  count               = var.use_existing_container_environment ? 1 : 0
-  name                = var.existing_container_environment_name
-  resource_group_name = var.resource_group_name
-}
-
-# Container App Environment - only create if not using shared environment or existing environment
+# Container App Environment - only create if not using shared environment
 resource "azurerm_container_app_environment" "env" {
-  count                      = var.shared_environment_id != null || var.use_existing_container_environment ? 0 : 1
+  count                      = var.shared_environment_id != null ? 0 : 1
   name                       = "${var.app_name}-${var.environment}-env"
   location                   = var.location
   resource_group_name        = var.resource_group_name
@@ -17,9 +10,7 @@ resource "azurerm_container_app_environment" "env" {
 
 # Local value to determine which environment ID to use
 locals {
-  container_app_environment_id = var.shared_environment_id != null ? var.shared_environment_id : (
-    var.use_existing_container_environment ? data.azurerm_container_app_environment.existing[0].id : azurerm_container_app_environment.env[0].id
-  )
+  container_app_environment_id = var.shared_environment_id != null ? var.shared_environment_id : azurerm_container_app_environment.env[0].id
 }
 
 resource "azurerm_container_app" "app" {

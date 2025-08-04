@@ -15,14 +15,14 @@ output "application_insights_instrumentation_key" {
   sensitive   = true
 }
 
-output "container_app_url" {
-  description = "Container App URL"
-  value       = module.container_app.container_app_url
+output "backend_app_url" {
+  description = "Backend Container App URL"
+  value       = module.backend_app.container_app_url
 }
 
 output "frontend_app_url" {
   description = "Frontend Container App URL"
-  value       = "https://scholardorm-frontend-production.gentlemeadow-49027184.eastus.azurecontainerapps.io"
+  value       = module.frontend_app.container_app_url
 }
 
 output "container_registry_url" {

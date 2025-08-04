@@ -1,15 +1,3 @@
-variable "use_existing_resource_group" {
-  description = "Whether to use an existing resource group instead of creating a new one"
-  type        = bool
-  default     = true  # Default to true since you have existing resources
-}
-
-variable "use_existing_container_registry" {
-  description = "Whether to use an existing container registry instead of creating a new one"
-  type        = bool
-  default     = true  # Default to true since you have existing resources
-}
-
 variable "app_name" {
   description = "Name of the application"
   type        = string
@@ -67,10 +55,4 @@ variable "memory" {
 variable "alert_email" {
   description = "Email address for alerts"
   type        = string
-}
-
-variable "use_existing_resource_group" {
-  description = "Whether to use an existing resource group or create a new one"
-  type        = bool
-  default     = true  # Default to using existing to avoid conflicts
 }

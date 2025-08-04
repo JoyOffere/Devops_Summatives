@@ -104,25 +104,19 @@ const LoginForm: React.FC = () => {
             />
             <span className="ml-2 text-sm text-gray-600">Remember me</span>
           </label>
-          <a href="/forgot-password" className="text-sm text-purple-600 hover:text-purple-700 font-medium">
-            Forgot password?
-          </a>
+          <a href="#" className="text-sm text-purple-600 hover:text-purple-700 font-medium">
+            Forgo#      </a>
         </div>
         
         <button
           type="submit"
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+          disab#       className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-#over:from-purple-700 hover:to-pink-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 #0 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] shadow-#"
         >
           {loading ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>Signing in...</span>
+            <div className="flex items-center justify-cente#          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animat#          <span>Signing in...</span>
             </div>
           ) : (
-            'Sign In 🚀'
-          )}
-        </button>
+            'Sign In 🚀#   </button>
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">

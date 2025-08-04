@@ -17,6 +17,8 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+# Keep example files
+!.env.example
 
 # IDE and editor files
 .vscode/
@@ -55,6 +57,8 @@ coverage/
 *.tfstate.*
 *.tfplan
 *.tfvars
+# Keep example files
+!*.tfvars.example
 .terraform.tfstate.lock.info
 
 # Azure

@@ -23,6 +23,10 @@ permissions:
 
 env:
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   REGISTRY_NAME_STAGING: acrcontainerappstaging
   REGISTRY_NAME_PRODUCTION: scholardormproductionacr
   RESOURCE_GROUP_STAGING: rg-containerapp-staging
@@ -101,6 +105,11 @@ jobs:
         with:
           terraform_version: 1.5.0
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Terraform Format Check
         run: |
           cd terraform-azure-containerapp
@@ -110,7 +119,7 @@ jobs:
       - name: Terraform Validate
         run: |
           cd terraform-azure-containerapp/environments/staging
-          terraform init -backend=false
+          terraform init
           terraform validate
 
   # Build and Test Applications
