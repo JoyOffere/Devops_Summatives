@@ -1,5 +1,5 @@
 import React from 'react';
-import RegisterForm from '../components/RegisterForm.tsx';
+import RegisterForm from '../components/RegisterForm';
 
 const Register: React.FunctionComponent = () => {
   return (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import MentorshipRequest from '../components/MentorshipRequest.tsx';
+import MentorshipRequest from '../components/MentorshipRequest';
 
 const Mentorship = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');

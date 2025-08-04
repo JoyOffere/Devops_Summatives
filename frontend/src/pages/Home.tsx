@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { isAuthenticated } from '../services/auth.ts';
+import { isAuthenticated } from '../services/auth';
 
 const Home = () => {
   const features = [

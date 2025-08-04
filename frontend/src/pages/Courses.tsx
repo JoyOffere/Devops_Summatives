@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import CourseCard from '../components/CourseCard.tsx';
+import CourseCard from '../components/CourseCard';
 
 const Courses = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
