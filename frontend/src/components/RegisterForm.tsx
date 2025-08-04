@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { register } from '../services/auth.ts';
+import { register } from '../services/auth';
 
 const RegisterForm = () => {
   const [email, setEmail] = useState('');

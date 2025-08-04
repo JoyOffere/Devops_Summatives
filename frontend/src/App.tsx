@@ -2,14 +2,14 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import './App.css';
-import Navbar from './components/Navbar.tsx';
-import Footer from './components/Footer.tsx';
-import Home from './pages/Home.tsx';
-import Dashboard from './pages/Dashboard.tsx';
-import Courses from './pages/Courses.tsx';
-import Mentorship from './pages/Mentorship.tsx';
-import Login from './pages/Login.tsx';
-import Register from './pages/Register.tsx';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import Home from './pages/Home';
+import Dashboard from './pages/Dashboard';
+import Courses from './pages/Courses';
+import Mentorship from './pages/Mentorship';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
 const App: React.FC = () => {
   return (
