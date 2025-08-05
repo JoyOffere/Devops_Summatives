@@ -31,7 +31,7 @@ const Dashboard = () => {
       ]);
 
       setDashboardData({
-        confidenceScore: 85,
+        confidenceScore: confidenceData.length > 0 ? 85 : 75,
         coursesCompleted: learningData.length || 3,
         projectsSubmitted: projectsData.length || 2,
         learningStreak: 12,
@@ -66,6 +66,17 @@ const Dashboard = () => {
           <h2 className="text-2xl font-bold mb-4">You are not authenticated</h2>
           <p className="mb-4">Please log in to access your dashboard.</p>
           <a href="/login" className="text-blue-600 underline">Go to Login</a>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
         </div>
       </div>
     );
