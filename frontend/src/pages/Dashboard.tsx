@@ -24,7 +24,7 @@ const Dashboard: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       // Simulate API calls 
-      const [confidenceData, learningData, projectsData] = await Promise.all([
+      const [, learningData, projectsData] = await Promise.all([
         fetchConfidenceDashboards().catch(() => []),
         fetchLearningProgress().catch(() => []),
         fetchPortfolioProjects().catch(() => [])
@@ -69,6 +69,17 @@ const Dashboard: React.FC = () => {
           <a href="/login" className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors">
             Go to Login
           </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
         </div>
       </div>
     );

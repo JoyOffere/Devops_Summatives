@@ -184,13 +184,21 @@ const RegisterForm = () => {
           />
           <label className="ml-2 text-sm text-gray-600">
             I agree to the{' '}
-            <a href="#" className="text-purple-600 hover:text-purple-700 font-medium">
+            <button 
+              type="button"
+              onClick={() => {/* TODO: Implement terms modal */}}
+              className="text-purple-600 hover:text-purple-700 font-medium bg-transparent border-none cursor-pointer p-0 underline"
+            >
               Terms of Service
-            </a>
+            </button>
             {' '}and{' '}
-            <a href="#" className="text-purple-600 hover:text-purple-700 font-medium">
+            <button 
+              type="button"
+              onClick={() => {/* TODO: Implement privacy modal */}}
+              className="text-purple-600 hover:text-purple-700 font-medium bg-transparent border-none cursor-pointer p-0 underline"
+            >
               Privacy Policy
-            </a>
+            </button>
           </label>
         </div>
         
