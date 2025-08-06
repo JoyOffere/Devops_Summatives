@@ -3,10 +3,8 @@ name: Security and Compliance Scan
 on:
   schedule:
     - cron: '0 2 * * *'  # Run daily at 2 AM
-  push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop  ]
   workflow_dispatch:
 
 permissions:
