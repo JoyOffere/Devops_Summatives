@@ -234,7 +234,7 @@ jobs:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     needs: [build-images]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop'
     environment: staging
     steps:
       - name: Checkout code
@@ -318,7 +318,7 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [deploy-staging]
+    needs: [build-images]
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     environment: production
     steps:
@@ -403,20 +403,28 @@ jobs:
   notify-and-cleanup:
     name: Notify and Cleanup
     runs-on: ubuntu-latest
-    needs: [deploy-production]
+    needs: [deploy-staging, deploy-production]
     if: always()
     steps:
       - name: Notify Teams/Slack (Success)
-        if: needs.deploy-production.result == 'success'
+        if: (needs.deploy-staging.result == 'success' && github.ref == 'refs/heads/develop') || (needs.deploy-production.result == 'success' && github.ref == 'refs/heads/main')
         run: |
-          echo "✅ Deployment to production completed successfully!"
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            echo "✅ Deployment to staging completed successfully!"
+          else
+            echo "✅ Deployment to production completed successfully!"
+          fi
           # Add your Teams/Slack webhook notification here
           # curl -X POST -H 'Content-type: application/json' --data '{"text":"✅ ScholarDorm deployment successful!"}' ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Notify Teams/Slack (Failure)
-        if: needs.deploy-production.result == 'failure'
+        if: (needs.deploy-staging.result == 'failure' && github.ref == 'refs/heads/develop') || (needs.deploy-production.result == 'failure' && github.ref == 'refs/heads/main')
         run: |
-          echo "❌ Deployment to production failed!"
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            echo "❌ Deployment to staging failed!"
+          else
+            echo "❌ Deployment to production failed!"
+          fi
           # Add your Teams/Slack webhook notification here
           # curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ ScholarDorm deployment failed!"}' ${{ secrets.SLACK_WEBHOOK_URL }}
 
