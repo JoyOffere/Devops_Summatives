@@ -17,4 +17,9 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
   }
+  
+  # Azure authentication is provided via environment variables:
+  # ARM_SUBSCRIPTION_ID, ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_TENANT_ID
+  # These are automatically picked up by the azurerm provider
+  # For local development, use 'az login' and the provider will use your credentials
 }
