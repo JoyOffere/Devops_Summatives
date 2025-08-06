@@ -1,9 +1,24 @@
-variable "region" {
-  description = "AWS region"
-  default     = "us-east-1"
+# Azure Infrastructure Variables
+variable "project_name" {
+  description = "Name of the project"
+  type        = string
+  default     = "scholardorm"
 }
 
-variable "project_name" {
-  description = "Project name"
-  default     = "scholar-dorm"
+variable "environment" {
+  description = "Environment (staging, production)"
+  type        = string
+  default     = "staging"
+}
+
+variable "location" {
+  description = "Azure region for resources"
+  type        = string
+  default     = "East US"
+}
+
+variable "mongo_uri" {
+  description = "MongoDB connection string"
+  type        = string
+  sensitive   = true
 }
