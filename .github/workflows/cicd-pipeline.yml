@@ -280,17 +280,14 @@ jobs:
       - name: Deploy infrastructure to staging
         working-directory: terraform
         run: |
-          # TODO: Convert AWS Terraform to Azure configuration
-          # Skipping Terraform deployment for now as current config is for AWS but deployment target is Azure
-          # # Initialize Terraform
-          # terraform init
-          # 
-          # # Plan deployment
-          # terraform plan -out=staging.tfplan
-          # 
-          # # Apply deployment
-          # terraform apply -auto-approve staging.tfplan
-          echo "Skipping Terraform deployment - infrastructure already exists in Azure"
+          # Initialize Terraform with Azure backend
+          terraform init
+          
+          # Plan deployment for staging
+          terraform plan -var="environment=staging" -var="mongo_uri=${{ secrets.MONGO_URI }}" -out=staging.tfplan
+          
+          # Apply deployment
+          terraform apply -auto-approve staging.tfplan
 
       - name: Update container apps in staging
         run: |
@@ -368,17 +365,14 @@ jobs:
       - name: Deploy infrastructure to production
         working-directory: terraform
         run: |
-          # TODO: Convert AWS Terraform to Azure configuration
-          # Skipping Terraform deployment for now as current config is for AWS but deployment target is Azure
-          # # Initialize Terraform
-          # terraform init
-          # 
-          # # Plan deployment
-          # terraform plan -out=production.tfplan
-          # 
-          # # Apply deployment
-          # terraform apply -auto-approve production.tfplan
-          echo "Skipping Terraform deployment - infrastructure already exists in Azure"
+          # Initialize Terraform with Azure backend
+          terraform init
+          
+          # Plan deployment for production
+          terraform plan -var="environment=production" -var="mongo_uri=${{ secrets.MONGO_URI }}" -out=production.tfplan
+          
+          # Apply deployment
+          terraform apply -auto-approve production.tfplan
 
       - name: Update container apps in production
         run: |
