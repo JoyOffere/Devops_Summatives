@@ -1,6 +1,13 @@
 # Azure Container Apps Infrastructure for ScholarDorm
 # This configuration creates the Azure resources needed for the application
 
+# Random string for unique resource names
+resource "random_string" "suffix" {
+  length  = 4
+  special = false
+  upper   = false
+}
+
 # Resource Group
 resource "azurerm_resource_group" "main" {
   name     = "${var.project_name}-${var.environment}-rg"
@@ -13,8 +20,16 @@ resource "azurerm_resource_group" "main" {
   }
 }
 
-# Container App Environment
+# Try to use existing Container App Environment first
+data "azurerm_container_app_environment" "existing" {
+  count               = var.use_existing_environment ? 1 : 0
+  name                = var.existing_environment_name
+  resource_group_name = var.existing_environment_rg
+}
+
+# Create new Container App Environment only if not using existing
 resource "azurerm_container_app_environment" "main" {
+  count               = var.use_existing_environment ? 0 : 1
   name                = "${var.project_name}-${var.environment}-env"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
@@ -25,9 +40,14 @@ resource "azurerm_container_app_environment" "main" {
   }
 }
 
+# Local value to reference the correct environment
+locals {
+  container_app_environment_id = var.use_existing_environment ? data.azurerm_container_app_environment.existing[0].id : azurerm_container_app_environment.main[0].id
+}
+
 # Azure Container Registry
 resource "azurerm_container_registry" "main" {
-  name                = "${var.project_name}${var.environment}acr"
+  name                = "${var.project_name}${var.environment}acr${random_string.suffix.result}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   sku                 = "Standard"
@@ -42,7 +62,7 @@ resource "azurerm_container_registry" "main" {
 # Backend Container App
 resource "azurerm_container_app" "backend" {
   name                         = "${var.project_name}-backend-${var.environment}"
-  container_app_environment_id = azurerm_container_app_environment.main.id
+  container_app_environment_id = local.container_app_environment_id
   resource_group_name          = azurerm_resource_group.main.name
   revision_mode                = "Single"
 
@@ -106,7 +126,7 @@ resource "azurerm_container_app" "backend" {
 # Frontend Container App
 resource "azurerm_container_app" "frontend" {
   name                         = "${var.project_name}-frontend-${var.environment}"
-  container_app_environment_id = azurerm_container_app_environment.main.id
+  container_app_environment_id = local.container_app_environment_id
   resource_group_name          = azurerm_resource_group.main.name
   revision_mode                = "Single"
 

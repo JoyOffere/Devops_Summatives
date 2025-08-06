@@ -22,3 +22,21 @@ variable "mongo_uri" {
   type        = string
   sensitive   = true
 }
+
+variable "use_existing_environment" {
+  description = "Whether to use an existing Container App Environment"
+  type        = bool
+  default     = false
+}
+
+variable "existing_environment_name" {
+  description = "Name of existing Container App Environment to use"
+  type        = string
+  default     = ""
+}
+
+variable "existing_environment_rg" {
+  description = "Resource group of existing Container App Environment"
+  type        = string
+  default     = ""
+}
