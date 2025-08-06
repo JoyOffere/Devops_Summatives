@@ -288,29 +288,26 @@ jobs:
           # Initialize Terraform with Azure backend
           terraform init
           
+          # Check and import existing resources before deployment
+          echo "Checking for existing Azure resources..."
+          
+          # Import existing resource group if it exists
+          if az group show --name scholardorm-staging-rg --output none 2>/dev/null; then
+            echo "Resource group exists, importing into Terraform state..."
+            terraform import -var="environment=staging" -var="mongo_uri=${{ secrets.MONGO_URI }}" azurerm_resource_group.main "/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/scholardorm-staging-rg" || echo "Resource group already in state"
+          fi
+          
+          # Import existing container registry if it exists
+          if az acr show --name scholardormstagingacr --output none 2>/dev/null; then
+            echo "Container registry exists, importing into Terraform state..."
+            terraform import -var="environment=staging" -var="mongo_uri=${{ secrets.MONGO_URI }}" azurerm_container_registry.main "/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/scholardorm-staging-rg/providers/Microsoft.ContainerRegistry/registries/scholardormstagingacr" || echo "Container registry already in state"
+          fi
+          
           # Plan deployment for staging
           terraform plan -var="environment=staging" -var="mongo_uri=${{ secrets.MONGO_URI }}" -out=staging.tfplan
           
-          # Apply deployment (with error handling for existing resources)
-          terraform apply -auto-approve staging.tfplan || {
-            echo "Checking for existing resources that need to be imported..."
-            
-            # Import existing resource group if it exists
-            if az group show --name scholardorm-staging-rg --output none 2>/dev/null; then
-              echo "Importing existing resource group..."
-              terraform import -var="environment=staging" -var="mongo_uri=${{ secrets.MONGO_URI }}" azurerm_resource_group.main "/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/scholardorm-staging-rg"
-            fi
-            
-            # Import existing container registry if it exists
-            if az acr show --name scholardormstagingacr --output none 2>/dev/null; then
-              echo "Importing existing container registry..."
-              terraform import -var="environment=staging" -var="mongo_uri=${{ secrets.MONGO_URI }}" azurerm_container_registry.main "/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/scholardorm-staging-rg/providers/Microsoft.ContainerRegistry/registries/scholardormstagingacr"
-            fi
-            
-            # Re-plan and apply after imports
-            terraform plan -var="environment=staging" -var="mongo_uri=${{ secrets.MONGO_URI }}" -out=staging.tfplan
-            terraform apply -auto-approve staging.tfplan
-          }
+          # Apply deployment
+          terraform apply -auto-approve staging.tfplan
 
       - name: Update container apps in staging
         run: |
@@ -396,29 +393,26 @@ jobs:
           # Initialize Terraform with Azure backend
           terraform init
           
+          # Check and import existing resources before deployment
+          echo "Checking for existing Azure resources..."
+          
+          # Import existing resource group if it exists
+          if az group show --name scholardorm-production-rg --output none 2>/dev/null; then
+            echo "Resource group exists, importing into Terraform state..."
+            terraform import -var="environment=production" -var="mongo_uri=${{ secrets.MONGO_URI }}" azurerm_resource_group.main "/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/scholardorm-production-rg" || echo "Resource group already in state"
+          fi
+          
+          # Import existing container registry if it exists
+          if az acr show --name scholardormproductionacr --output none 2>/dev/null; then
+            echo "Container registry exists, importing into Terraform state..."
+            terraform import -var="environment=production" -var="mongo_uri=${{ secrets.MONGO_URI }}" azurerm_container_registry.main "/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/scholardorm-production-rg/providers/Microsoft.ContainerRegistry/registries/scholardormproductionacr" || echo "Container registry already in state"
+          fi
+          
           # Plan deployment for production
           terraform plan -var="environment=production" -var="mongo_uri=${{ secrets.MONGO_URI }}" -out=production.tfplan
           
-          # Apply deployment (with error handling for existing resources)
-          terraform apply -auto-approve production.tfplan || {
-            echo "Checking for existing resources that need to be imported..."
-            
-            # Import existing resource group if it exists
-            if az group show --name scholardorm-production-rg --output none 2>/dev/null; then
-              echo "Importing existing resource group..."
-              terraform import -var="environment=production" -var="mongo_uri=${{ secrets.MONGO_URI }}" azurerm_resource_group.main "/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/scholardorm-production-rg"
-            fi
-            
-            # Import existing container registry if it exists
-            if az acr show --name scholardormproductionacr --output none 2>/dev/null; then
-              echo "Importing existing container registry..."
-              terraform import -var="environment=production" -var="mongo_uri=${{ secrets.MONGO_URI }}" azurerm_container_registry.main "/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/scholardorm-production-rg/providers/Microsoft.ContainerRegistry/registries/scholardormproductionacr"
-            fi
-            
-            # Re-plan and apply after imports
-            terraform plan -var="environment=production" -var="mongo_uri=${{ secrets.MONGO_URI }}" -out=production.tfplan
-            terraform apply -auto-approve production.tfplan
-          }
+          # Apply deployment
+          terraform apply -auto-approve production.tfplan
 
       - name: Update container apps in production
         run: |
