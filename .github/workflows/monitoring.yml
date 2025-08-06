@@ -1,0 +1,345 @@
+name: Monitoring and Health Checks
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Run every 15 minutes
+    - cron: '0 6 * * *'     # Daily health report at 6 AM
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to check'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+        - staging
+        - production
+        - both
+
+env:
+  STAGING_FRONTEND_URL: https://scholardorm-frontend-staging.gentlemeadow-49027184.eastus.azurecontainerapps.io
+  STAGING_BACKEND_URL: https://scholardorm-backend-staging.gentlemeadow-49027184.eastus.azurecontainerapps.io
+  PRODUCTION_FRONTEND_URL: https://scholardorm-frontend-production.gentlemeadow-49027184.eastus.azurecontainerapps.io
+  PRODUCTION_BACKEND_URL: https://scholardorm-production.gentlemeadow-49027184.eastus.azurecontainerapps.io
+
+jobs:
+  # Health check for staging
+  health-check-staging:
+    name: Health Check - Staging
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'staging' || github.event.inputs.environment == 'both' || github.event_name == 'schedule'
+    steps:
+      - name: Frontend Health Check
+        run: |
+          echo "🔍 Checking staging frontend health..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.STAGING_FRONTEND_URL }})
+          if [ $response -eq 200 ]; then
+            echo "✅ Frontend is healthy (HTTP $response)"
+          else
+            echo "❌ Frontend is unhealthy (HTTP $response)"
+            exit 1
+          fi
+
+      - name: Backend Health Check
+        run: |
+          echo "🔍 Checking staging backend health..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.STAGING_BACKEND_URL }}/api/health)
+          if [ $response -eq 200 ]; then
+            echo "✅ Backend is healthy (HTTP $response)"
+          else
+            echo "❌ Backend is unhealthy (HTTP $response)"
+            exit 1
+          fi
+
+      - name: Response Time Check
+        run: |
+          echo "🔍 Checking staging response times..."
+          
+          # Frontend response time
+          frontend_time=$(curl -o /dev/null -s -w "%{time_total}" ${{ env.STAGING_FRONTEND_URL }})
+          echo "Frontend response time: ${frontend_time}s"
+          
+          # Backend response time
+          backend_time=$(curl -o /dev/null -s -w "%{time_total}" ${{ env.STAGING_BACKEND_URL }}/api/health)
+          echo "Backend response time: ${backend_time}s"
+          
+          # Check if response times are acceptable (< 5 seconds)
+          if (( $(echo "$frontend_time > 5" | bc -l) )); then
+            echo "⚠️ Frontend response time is slow: ${frontend_time}s"
+          fi
+          
+          if (( $(echo "$backend_time > 5" | bc -l) )); then
+            echo "⚠️ Backend response time is slow: ${backend_time}s"
+          fi
+
+      - name: SSL Certificate Check
+        run: |
+          echo "🔍 Checking SSL certificates..."
+          
+          # Check frontend SSL
+          echo | openssl s_client -servername $(echo ${{ env.STAGING_FRONTEND_URL }} | cut -d/ -f3) -connect $(echo ${{ env.STAGING_FRONTEND_URL }} | cut -d/ -f3):443 2>/dev/null | openssl x509 -noout -dates
+          
+          # Check backend SSL
+          echo | openssl s_client -servername $(echo ${{ env.STAGING_BACKEND_URL }} | cut -d/ -f3) -connect $(echo ${{ env.STAGING_BACKEND_URL }} | cut -d/ -f3):443 2>/dev/null | openssl x509 -noout -dates
+
+  # Health check for production
+  health-check-production:
+    name: Health Check - Production
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'production' || github.event.inputs.environment == 'both' || github.event_name == 'schedule'
+    steps:
+      - name: Frontend Health Check
+        run: |
+          echo "🔍 Checking production frontend health..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.PRODUCTION_FRONTEND_URL }})
+          if [ $response -eq 200 ]; then
+            echo "✅ Frontend is healthy (HTTP $response)"
+          else
+            echo "❌ Frontend is unhealthy (HTTP $response)"
+            exit 1
+          fi
+
+      - name: Backend Health Check
+        run: |
+          echo "🔍 Checking production backend health..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.PRODUCTION_BACKEND_URL }}/api/health)
+          if [ $response -eq 200 ]; then
+            echo "✅ Backend is healthy (HTTP $response)"
+          else
+            echo "❌ Backend is unhealthy (HTTP $response)"
+            exit 1
+          fi
+
+      - name: Response Time Check
+        run: |
+          echo "🔍 Checking production response times..."
+          
+          # Frontend response time
+          frontend_time=$(curl -o /dev/null -s -w "%{time_total}" ${{ env.PRODUCTION_FRONTEND_URL }})
+          echo "Frontend response time: ${frontend_time}s"
+          
+          # Backend response time
+          backend_time=$(curl -o /dev/null -s -w "%{time_total}" ${{ env.PRODUCTION_BACKEND_URL }}/api/health)
+          echo "Backend response time: ${backend_time}s"
+          
+          # Check if response times are acceptable (< 3 seconds for production)
+          if (( $(echo "$frontend_time > 3" | bc -l) )); then
+            echo "⚠️ Frontend response time is slow: ${frontend_time}s"
+          fi
+          
+          if (( $(echo "$backend_time > 3" | bc -l) )); then
+            echo "⚠️ Backend response time is slow: ${backend_time}s"
+          fi
+
+      - name: SSL Certificate Check
+        run: |
+          echo "🔍 Checking SSL certificates..."
+          
+          # Check frontend SSL
+          echo | openssl s_client -servername $(echo ${{ env.PRODUCTION_FRONTEND_URL }} | cut -d/ -f3) -connect $(echo ${{ env.PRODUCTION_FRONTEND_URL }} | cut -d/ -f3):443 2>/dev/null | openssl x509 -noout -dates
+          
+          # Check backend SSL
+          echo | openssl s_client -servername $(echo ${{ env.PRODUCTION_BACKEND_URL }} | cut -d/ -f3) -connect $(echo ${{ env.PRODUCTION_BACKEND_URL }} | cut -d/ -f3):443 2>/dev/null | openssl x509 -noout -dates
+
+  # Azure resource health check
+  azure-resource-check:
+    name: Azure Resource Health Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.event.schedule == '0 6 * * *'  # Daily only
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Check Container App Status
+        run: |
+          echo "🔍 Checking Azure Container Apps status..."
+          
+          echo "## Staging Environment"
+          az containerapp list --resource-group rg-containerapp-staging --query "[].{Name:name, Status:properties.runningStatus, Health:properties.provisioningState}" --output table
+          
+          echo "## Production Environment"
+          az containerapp list --resource-group scholardorm-production-rg --query "[].{Name:name, Status:properties.runningStatus, Health:properties.provisioningState}" --output table
+
+      - name: Check Container Registry Health
+        run: |
+          echo "🔍 Checking Azure Container Registry status..."
+          
+          echo "## Staging Registry"
+          az acr show --name acrcontainerappstaging --query "{Name:name, Status:provisioningState, LoginServer:loginServer}" --output table
+          
+          echo "## Production Registry"
+          az acr show --name scholardormproductionacr --query "{Name:name, Status:provisioningState, LoginServer:loginServer}" --output table
+
+      - name: Check Application Insights Metrics
+        run: |
+          echo "🔍 Checking Application Insights metrics..."
+          
+          # Get recent metrics for staging
+          echo "## Staging Metrics (Last 24h)"
+          az monitor metrics list \
+            --resource "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-containerapp-staging/providers/Microsoft.Insights/components/scholardorm-staging-insights-staging" \
+            --metric "requests/count" \
+            --interval PT1H \
+            --start-time $(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --query "value[0].timeseries[0].data[-24:].[timeStamp,total]" \
+            --output table || true
+          
+          # Get recent metrics for production
+          echo "## Production Metrics (Last 24h)"
+          az monitor metrics list \
+            --resource "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/scholardorm-production-rg/providers/Microsoft.Insights/components/scholardorm-production-insights" \
+            --metric "requests/count" \
+            --interval PT1H \
+            --start-time $(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --query "value[0].timeseries[0].data[-24:].[timeStamp,total]" \
+            --output table || true
+
+  # Performance testing
+  performance-test:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.event.schedule == '0 6 * * *'  # Daily only
+    strategy:
+      matrix:
+        environment: [staging, production]
+    steps:
+      - name: Setup URLs
+        run: |
+          if [ "${{ matrix.environment }}" == "staging" ]; then
+            echo "FRONTEND_URL=${{ env.STAGING_FRONTEND_URL }}" >> $GITHUB_ENV
+            echo "BACKEND_URL=${{ env.STAGING_BACKEND_URL }}" >> $GITHUB_ENV
+          else
+            echo "FRONTEND_URL=${{ env.PRODUCTION_FRONTEND_URL }}" >> $GITHUB_ENV
+            echo "BACKEND_URL=${{ env.PRODUCTION_BACKEND_URL }}" >> $GITHUB_ENV
+          fi
+
+      - name: Install Artillery
+        run: npm install -g artillery
+
+      - name: Create Load Test Config
+        run: |
+          cat > load-test.yml << EOF
+          config:
+            target: '${{ env.FRONTEND_URL }}'
+            phases:
+              - duration: 60
+                arrivalRate: 5
+                name: "Warm up"
+              - duration: 120
+                arrivalRate: 10
+                name: "Load test"
+          scenarios:
+            - name: "Frontend load test"
+              requests:
+                - get:
+                    url: "/"
+                - get:
+                    url: "/login"
+                - get:
+                    url: "/register"
+          EOF
+
+      - name: Run Load Test
+        run: |
+          echo "🔍 Running load test for ${{ matrix.environment }}..."
+          artillery run load-test.yml --output performance-${{ matrix.environment }}.json
+          artillery report performance-${{ matrix.environment }}.json --output performance-${{ matrix.environment }}.html
+
+      - name: Upload Performance Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report-${{ matrix.environment }}
+          path: performance-${{ matrix.environment }}.html
+
+  # Generate daily health report
+  daily-health-report:
+    name: Daily Health Report
+    runs-on: ubuntu-latest
+    needs: [health-check-staging, health-check-production, azure-resource-check, performance-test]
+    if: always() && github.event.schedule == '0 6 * * *'  # Daily only
+    steps:
+      - name: Generate Health Report
+        run: |
+          echo "# 🏥 Daily Health Report - $(date +%Y-%m-%d)" > health-report.md
+          echo "" >> health-report.md
+          echo "## System Health Status" >> health-report.md
+          echo "- **Staging Health Check:** ${{ needs.health-check-staging.result }}" >> health-report.md
+          echo "- **Production Health Check:** ${{ needs.health-check-production.result }}" >> health-report.md
+          echo "- **Azure Resource Check:** ${{ needs.azure-resource-check.result }}" >> health-report.md
+          echo "- **Performance Testing:** ${{ needs.performance-test.result }}" >> health-report.md
+          echo "" >> health-report.md
+          echo "## Environment URLs" >> health-report.md
+          echo "### Staging" >> health-report.md
+          echo "- Frontend: ${{ env.STAGING_FRONTEND_URL }}" >> health-report.md
+          echo "- Backend: ${{ env.STAGING_BACKEND_URL }}" >> health-report.md
+          echo "" >> health-report.md
+          echo "### Production" >> health-report.md
+          echo "- Frontend: ${{ env.PRODUCTION_FRONTEND_URL }}" >> health-report.md
+          echo "- Backend: ${{ env.PRODUCTION_BACKEND_URL }}" >> health-report.md
+          echo "" >> health-report.md
+          echo "---" >> health-report.md
+          echo "*Report generated at $(date -u)*" >> health-report.md
+
+      - name: Upload Health Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-health-report
+          path: health-report.md
+
+      - name: Send Notification
+        run: |
+          # You can add Slack/Teams notification here
+          echo "📊 Daily health report generated successfully"
+          # Example: curl -X POST -H 'Content-type: application/json' --data '{"text":"📊 Daily ScholarDorm health report is ready!"}' ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Alert on failures
+  alert-on-failure:
+    name: Alert on Health Check Failure
+    runs-on: ubuntu-latest
+    needs: [health-check-staging, health-check-production]
+    if: always() && (needs.health-check-staging.result == 'failure' || needs.health-check-production.result == 'failure')
+    steps:
+      - name: Create Issue for Failed Health Check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const stagingStatus = '${{ needs.health-check-staging.result }}';
+            const productionStatus = '${{ needs.health-check-production.result }}';
+            
+            let title = '🚨 Health Check Failure';
+            let body = `## Health Check Failure Alert\n\n**Time:** ${new Date().toISOString()}\n\n`;
+            
+            if (stagingStatus === 'failure') {
+              body += '❌ **Staging Environment:** Health check failed\n';
+            } else {
+              body += '✅ **Staging Environment:** Health check passed\n';
+            }
+            
+            if (productionStatus === 'failure') {
+              body += '❌ **Production Environment:** Health check failed\n';
+            } else {
+              body += '✅ **Production Environment:** Health check passed\n';
+            }
+            
+            body += '\n## Action Required\n';
+            body += '1. Check the failed workflow logs for details\n';
+            body += '2. Investigate the specific service that is failing\n';
+            body += '3. Verify Azure Container Apps status\n';
+            body += '4. Check Application Insights for errors\n';
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['alert', 'health-check', 'urgent']
+            });
+
+      - name: Send Critical Alert
+        run: |
+          echo "🚨 CRITICAL: Health check failure detected!"
+          echo "Staging Status: ${{ needs.health-check-staging.result }}"
+          echo "Production Status: ${{ needs.health-check-production.result }}"
+          # Add your critical alerting mechanism here (PagerDuty, email, etc.)
