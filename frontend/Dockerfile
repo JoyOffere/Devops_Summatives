@@ -10,8 +10,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install ALL dependencies (including devDependencies for build)
-# Use npm install instead of npm ci for better compatibility
-RUN npm install
+# Use npm install with legacy peer deps for TypeScript compatibility
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .

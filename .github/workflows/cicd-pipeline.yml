@@ -142,8 +142,8 @@ jobs:
       - name: Install dependencies
         working-directory: ./${{ matrix.app }}
         run: |
-          # Try npm ci first, fallback to npm install if lock file is out of sync
-          npm ci || (echo "Lock file out of sync, running npm install..." && npm install)
+          # Try npm ci first, fallback to npm install with legacy peer deps if conflicts exist
+          npm ci || (echo "Lock file out of sync or peer dependency conflicts, running npm install with legacy peer deps..." && npm install --legacy-peer-deps)
 
       - name: Run tests
         working-directory: ./${{ matrix.app }}
