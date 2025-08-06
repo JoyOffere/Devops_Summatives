@@ -37,12 +37,9 @@ const connectDB = async () => {
     console.log('MongoDB URI:', process.env.MONGO_URI ? 'URI provided' : 'URI missing');
     
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 10000, // Increased timeout for Azure
       socketTimeoutMS: 45000,
       maxPoolSize: 10,
-      bufferMaxEntries: 0,
       retryWrites: true,
       w: 'majority'
     });
@@ -58,10 +55,10 @@ const connectDB = async () => {
 
 // Import your route files
 const userRoutes = require('./routes/users');
-const learningProgressRoutes = require('./routes/learning-progress');
-const mentorshipAssignmentRoutes = require('./routes/mentorship-assignments');
-const confidenceDashboardRoutes = require('./routes/confidence-dashboards');
-const portfolioProjectRoutes = require('./routes/portfolio-projects');
+const learningProgressRoutes = require('./routes/learningProgress');
+const mentorshipAssignmentRoutes = require('./routes/mentorshipAssignments');
+const confidenceDashboardRoutes = require('./routes/confidenceDashboards');
+const portfolioProjectRoutes = require('./routes/portfolioProjects');
 
 // Connect to database first
 connectDB();
@@ -126,22 +123,6 @@ app.get('/test', (req, res) => {
     message: 'Backend is working!',
     timestamp: new Date().toISOString(),
     routes: ['/users/register', '/api/users/register']
-  });
-});
-
-// Add a catch-all route for debugging
-app.use('*', (req, res) => {
-  console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({
-    error: 'Route not found',
-    method: req.method,
-    path: req.originalUrl,
-    availableRoutes: [
-      'GET /health',
-      'GET /test',
-      'POST /users/register',
-      'POST /api/users/register'
-    ]
   });
 });
 

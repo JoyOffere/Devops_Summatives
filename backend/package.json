@@ -1,7 +1,9 @@
 {
   "scripts": {
     "start": "nodemon src/index.js",
-    "test": "jest",
+    "test": "jest --coverage --watchAll=false",
+    "test:watch": "jest --watch",
+    "test:integration": "jest --testPathPattern=integration",
     "lint": "eslint ."
   },
   "name": "backend",
@@ -27,5 +29,24 @@
     "jest": "^30.0.3",
     "nodemon": "^3.1.10",
     "supertest": "^7.1.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/index.js",
+      "!src/**/node_modules/**"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"],
+    "testMatch": ["**/tests/**/*.test.js"],
+    "coverageThreshold": {
+      "global": {
+        "branches": 0,
+        "functions": 4,
+        "lines": 18,
+        "statements": 18
+      }
+    }
   }
 }
