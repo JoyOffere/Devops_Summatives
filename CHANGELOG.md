@@ -1,13 +1,6 @@
 # Changelog
 
-All notable changes to Scholar-Dorm will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-## [1.2.1] - 2025-08-06
+## [1.2.1] - 2025-07-29
 
 ### Added
 - Enhanced dashboard welcome message with platform branding
@@ -30,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code quality checks (ESLint) passed
 - Container security scanning completed successfully
 
-## [1.2.0] - 2025-08-05
+## [1.2.0] - 2025-07-25
 
 ### Added
 - Comprehensive DevOps pipeline implementation
@@ -51,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MongoDB connection stability improved
 - Authentication flow optimized
 
-## [1.1.0] - 2025-08-04
+## [1.1.0] - 2025-07-20
 
 ### Added
 - User authentication system
@@ -65,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Database schema optimization
 - Performance enhancements
 
-## [1.0.0] - 2025-08-03
+## [1.0.0] - 2025-07-27
 
 ### Added
 - Initial release of Scholar-Dorm platform
@@ -94,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Deployment Information
 
 - **Production**: https://scholardorm.azurewebsites.net
-- **Staging**: [Staging URL]
+- **Staging**: [https://portal.azure.com/#@hijoyofferegmail.onmicrosoft.com/resource/subscriptions/850ca137-52f3-4c84-b574-df173011600e/resourceGroups/ai_scholardorm-staging-insights-staging_448b626e-0c95-437d-8163-16f261cc3022_managed/overview]
 - **Repository**: https://github.com/JoyOffere/Devops_Summatives
 - **CI/CD**: GitHub Actions
 - **Monitoring**: Azure Application Insights / AWS CloudWatch
