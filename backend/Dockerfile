@@ -1,7 +1,7 @@
 #  Azure-optimized Backend Dockerfile
 # Production-ready Node.js application
 
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Install security updates and necessary packages
 RUN apk update && apk upgrade && \
