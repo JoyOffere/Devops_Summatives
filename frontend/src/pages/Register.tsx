@@ -7,7 +7,7 @@ const Register: React.FunctionComponent = () => {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="text-4xl mb-4"></div>
-          <h2 className="text-3xl font-bold text-gray-800">Join Scholar-- Dorm</h2>
+          <h2 className="text-3xl font-bold text-gray-800">Welcome To Scholar</h2>
           <p className="text-gray-600 mt-2">Start your journey in tech with us</p>
         </div>
         <RegisterForm />
