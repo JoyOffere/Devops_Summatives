@@ -298,12 +298,28 @@ jobs:
             echo "Found existing Container App Environments, cleaning up to avoid quota limits..."
             echo "$EXISTING_ENVS" | while IFS=$'\t' read -r env_name resource_group; do
               if [ ! -z "$env_name" ] && [ ! -z "$resource_group" ]; then
-                echo "Deleting Container App Environment: $env_name in resource group: $resource_group"
+                echo "Cleaning up Container App Environment: $env_name in resource group: $resource_group"
+                
+                # First, delete all Container Apps in this environment
+                echo "Finding Container Apps in environment: $env_name"
+                CONTAINER_APPS=$(az containerapp list --resource-group "$resource_group" --query "[?properties.environmentId contains '$env_name'].name" -o tsv 2>/dev/null || echo "")
+                if [ ! -z "$CONTAINER_APPS" ]; then
+                  echo "Found Container Apps to delete: $CONTAINER_APPS"
+                  for app in $CONTAINER_APPS; do
+                    echo "Deleting Container App: $app"
+                    az containerapp delete --name "$app" --resource-group "$resource_group" --yes --no-wait || echo "Failed to delete $app, continuing..."
+                  done
+                  echo "Waiting for Container Apps to be deleted..."
+                  sleep 30
+                fi
+                
+                # Now delete the Container App Environment
+                echo "Deleting Container App Environment: $env_name"
                 az containerapp env delete --name "$env_name" --resource-group "$resource_group" --yes --no-wait || echo "Failed to delete $env_name, continuing..."
               fi
             done
             echo "Waiting for environment cleanup to complete..."
-            sleep 60
+            sleep 90
           fi
           
           # Import existing resource group if it exists
