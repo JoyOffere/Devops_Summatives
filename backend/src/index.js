@@ -48,8 +48,11 @@ const connectDB = async () => {
     return conn;
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    // Retry connection after 5 seconds
-    setTimeout(connectDB, 5000);
+    // Only retry in production, not during tests
+    if (process.env.NODE_ENV !== 'test') {
+      setTimeout(connectDB, 5000);
+    }
+    throw error; // Re-throw for tests to handle properly
   }
 };
 
