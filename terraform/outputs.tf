@@ -26,5 +26,5 @@ output "frontend_url" {
 
 output "container_app_environment_id" {
   description = "ID of the Container App Environment"
-  value       = azurerm_container_app_environment.main.id
+  value       = local.container_app_environment_id
 }
