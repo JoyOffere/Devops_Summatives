@@ -1,9 +1,9 @@
 name: Monitoring and Health Checks
 
-on:
-  schedule:
-    - cron: '*/15 * * * *'  # Run every 15 minutes
-    - cron: '0 6 * * *'     # Daily health report at 6 AM
+# on:
+#   schedule:
+#     - cron: '*/15 * * * *'  # Run every 15 minutes
+#     - cron: '0 6 * * *'     # Daily health report at 6 AM
   workflow_dispatch:
     inputs:
       environment:
